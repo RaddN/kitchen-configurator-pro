@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace KitchenConfiguratorPro\Services;
 
+use KitchenConfiguratorPro\Frontend\TargetRouteCompat;
 use KitchenConfiguratorPro\Frontend\SiteShellMenuItemFields;
 use KitchenConfiguratorPro\Frontend\SiteShellMenuRegistry;
 use KitchenConfiguratorPro\Repositories\CabinetCategoryRepository;
@@ -36,10 +37,13 @@ final class SiteShellMenuBuilder {
 			return array();
 		}
 
+		$is_shop_home = ( function_exists( 'is_shop' ) && is_shop() )
+			|| TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_SHOP_HOME );
+
 		return array(
-			self::link( __( 'configurator', 'kitchen-configurator-pro' ), $configurator_url, ConfiguratorLandingService::is_active() || ( function_exists( 'is_shop' ) && is_shop() ) ),
+			self::link( __( 'configurator', 'kitchen-configurator-pro' ), $configurator_url, ConfiguratorLandingService::is_active() || TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_CONFIGURATOR ) ),
 			self::link( __( 'populaire opstellingen', 'kitchen-configurator-pro' ), $shop_url, function_exists( 'is_product_category' ) && is_product_category() ),
-			self::link( __( 'webshop', 'kitchen-configurator-pro' ), $shop_url, function_exists( 'is_shop' ) && is_shop() ),
+			self::link( __( 'webshop', 'kitchen-configurator-pro' ), $shop_url, $is_shop_home ),
 			self::link( __( 'bezoek showroom', 'kitchen-configurator-pro' ), SiteShellSettingsService::get_settings()['announcement_url'] ?? '', false ),
 		);
 	}
@@ -78,15 +82,21 @@ final class SiteShellMenuBuilder {
 			return array();
 		}
 
-		$shop_url = function_exists( 'wc_get_page_permalink' )
-			? (string) wc_get_page_permalink( 'shop' )
-			: home_url( '/shop/' );
+		$shop_url = TargetRouteCompat::is_target_request()
+			? TargetRouteCompat::shop_home_url()
+			: (
+				function_exists( 'wc_get_page_permalink' )
+					? (string) wc_get_page_permalink( 'shop' )
+					: home_url( '/shop/' )
+			);
+		$is_shop_home = ( function_exists( 'is_shop' ) && is_shop() )
+			|| TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_SHOP_HOME );
 
 		return array(
 			array(
 				'label'    => __( 'Configurator', 'kitchen-configurator-pro' ),
-				'url'      => $shop_url,
-				'is_active'=> function_exists( 'is_shop' ) && is_shop(),
+				'url'      => TargetRouteCompat::is_target_request() ? TargetRouteCompat::configurator_url() : ConfiguratorLandingService::get_page_url(),
+				'is_active'=> ConfiguratorLandingService::is_active() || TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_CONFIGURATOR ),
 				'children' => array(),
 			),
 			array(
@@ -98,7 +108,7 @@ final class SiteShellMenuBuilder {
 			array(
 				'label'    => __( 'Webshop', 'kitchen-configurator-pro' ),
 				'url'      => $shop_url,
-				'is_active'=> false,
+				'is_active'=> $is_shop_home,
 				'children' => self::product_category_links( $shop_url, SiteShellSettingsService::get_settings()['webshop_category_slug'] ?? '' ),
 			),
 		);
@@ -110,9 +120,13 @@ final class SiteShellMenuBuilder {
 	public static function get_footer_columns(): array {
 		$settings = SiteShellSettingsService::get_settings();
 		$titles   = is_array( $settings['footer_titles'] ?? null ) ? $settings['footer_titles'] : array();
-		$shop_url = function_exists( 'wc_get_page_permalink' )
-			? (string) wc_get_page_permalink( 'shop' )
-			: home_url( '/shop/' );
+		$shop_url = TargetRouteCompat::is_target_request()
+			? TargetRouteCompat::shop_home_url()
+			: (
+				function_exists( 'wc_get_page_permalink' )
+					? (string) wc_get_page_permalink( 'shop' )
+					: home_url( '/shop/' )
+			);
 
 		$locations = array(
 			SiteShellMenuRegistry::FOOTER_1 => array(
@@ -191,10 +205,11 @@ final class SiteShellMenuBuilder {
 				continue;
 			}
 
-			$url = (string) ( $item->url ?? '' );
+			$label = html_entity_decode( (string) ( $item->title ?? '' ), ENT_QUOTES, get_bloginfo( 'charset' ) );
+			$url   = self::normalize_target_menu_url( $label, (string) ( $item->url ?? '' ) );
 
 			$links[] = array(
-				'label'  => html_entity_decode( (string) ( $item->title ?? '' ), ENT_QUOTES, get_bloginfo( 'charset' ) ),
+				'label'  => $label,
 				'url'    => $url,
 				'target' => (string) ( $item->target ?? '' ),
 			);
@@ -247,10 +262,11 @@ final class SiteShellMenuBuilder {
 		$branch = array();
 
 		foreach ( $by_parent[ $parent_id ] ?? array() as $item ) {
-			$url    = (string) ( $item->url ?? '' );
+			$label  = html_entity_decode( (string) ( $item->title ?? '' ), ENT_QUOTES, get_bloginfo( 'charset' ) );
+			$url    = self::normalize_target_menu_url( $label, (string) ( $item->url ?? '' ) );
 			$images = SiteShellMenuItemFields::get_item_images( (int) $item->ID );
 			$row    = array(
-				'label'       => html_entity_decode( (string) ( $item->title ?? '' ), ENT_QUOTES, get_bloginfo( 'charset' ) ),
+				'label'       => $label,
 				'url'         => $url,
 				'is_active'   => self::is_url_active( $url, $item ),
 				'image'       => $images['image'],
@@ -306,7 +322,9 @@ final class SiteShellMenuBuilder {
 				continue;
 			}
 
-			$url = get_term_link( $term );
+			$url = TargetRouteCompat::is_target_request()
+				? self::target_product_category_url( $term )
+				: get_term_link( $term );
 			$links[] = array(
 				'label'       => $term->name,
 				'url'         => is_string( $url ) && ! is_wp_error( $url ) ? $url : $fallback_url,
@@ -360,6 +378,69 @@ final class SiteShellMenuBuilder {
 		);
 
 		return $links;
+	}
+
+	/**
+	 * Build target-compatible product category URLs from a term hierarchy.
+	 */
+	private static function target_product_category_url( \WP_Term $term ): string {
+		$slugs   = array( $term->slug );
+		$current = $term;
+
+		while ( $current->parent > 0 ) {
+			$parent = get_term( (int) $current->parent, 'product_cat' );
+
+			if ( ! $parent instanceof \WP_Term || is_wp_error( $parent ) ) {
+				break;
+			}
+
+			array_unshift( $slugs, $parent->slug );
+			$current = $parent;
+		}
+
+		return home_url( '/shop/' . implode( '/', array_map( 'sanitize_title', $slugs ) ) . '.html' );
+	}
+
+	/**
+	 * Translate assigned WordPress menu URLs into the target .html surface.
+	 */
+	private static function normalize_target_menu_url( string $label, string $url ): string {
+		if ( ! TargetRouteCompat::is_target_request() ) {
+			return $url;
+		}
+
+		$key = strtolower( trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $label ) ) ?? '' ) );
+		$map = array(
+			'configurator'   => TargetRouteCompat::configurator_url(),
+			'webshop'        => TargetRouteCompat::shop_home_url(),
+			'winkelwagen'    => TargetRouteCompat::cart_url(),
+			'vipp'           => home_url( '/shop/vipp.html' ),
+			'quooker'        => home_url( '/shop/quooker.html' ),
+			'bora'           => home_url( '/shop/bora.html' ),
+			'buster+punch'   => home_url( '/shop/buster-punch.html' ),
+			'buster + punch' => home_url( '/shop/buster-punch.html' ),
+			'monsterbox'     => home_url( '/shop/monsterbox.html' ),
+		);
+
+		if ( isset( $map[ $key ] ) ) {
+			return $map[ $key ];
+		}
+
+		$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+
+		if ( str_ends_with( $path, 'configurator' ) ) {
+			return TargetRouteCompat::configurator_url();
+		}
+
+		if ( str_contains( $path, 'afrekenen' ) || str_contains( $path, 'winkelwagen' ) || str_ends_with( $path, 'cart' ) ) {
+			return TargetRouteCompat::cart_url();
+		}
+
+		if ( '' !== $path && str_ends_with( $path, 'shop' ) ) {
+			return TargetRouteCompat::shop_home_url();
+		}
+
+		return $url;
 	}
 
 	/**

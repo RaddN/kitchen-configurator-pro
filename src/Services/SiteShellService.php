@@ -66,13 +66,24 @@ final class SiteShellService {
 	 */
 	public static function get_view_model(): array {
 		$settings         = SiteShellSettingsService::get_settings();
-		$shop_url         = function_exists( 'wc_get_page_permalink' )
-			? (string) wc_get_page_permalink( 'shop' )
-			: home_url( '/shop/' );
-		$cart_url         = function_exists( 'wc_get_cart_url' )
-			? (string) wc_get_cart_url()
-			: home_url( '/cart/' );
-		$configurator_url = ConfiguratorLandingService::get_page_url();
+		$target_request   = TargetRouteCompat::is_target_request();
+		$shop_url         = $target_request
+			? TargetRouteCompat::shop_home_url()
+			: (
+				function_exists( 'wc_get_page_permalink' )
+					? (string) wc_get_page_permalink( 'shop' )
+					: home_url( '/shop/' )
+			);
+		$cart_url         = $target_request
+			? TargetRouteCompat::cart_url()
+			: (
+				function_exists( 'wc_get_cart_url' )
+					? (string) wc_get_cart_url()
+					: home_url( '/cart/' )
+			);
+		$configurator_url = $target_request
+			? TargetRouteCompat::configurator_url()
+			: ConfiguratorLandingService::get_page_url();
 
 		return array(
 			'home_url'              => home_url( '/' ),

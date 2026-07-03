@@ -16,11 +16,12 @@ use KitchenConfiguratorPro\Support\Helpers;
  */
 final class TargetRouteCompat {
 
-	private const REWRITE_VERSION = '2';
+	private const REWRITE_VERSION = '3';
 
 	public const ROUTE_CONFIGURATOR = 'configurator';
 	public const ROUTE_CONFIGURATOR_EMPTY = 'configurator_empty';
 	public const ROUTE_ASSISTANT = 'assistant';
+	public const ROUTE_SHOP_HOME = 'shop_home';
 	public const ROUTE_CHECKOUT_EMPTY = 'checkout_empty';
 
 	/**
@@ -32,6 +33,8 @@ final class TargetRouteCompat {
 		add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
 		add_filter( 'redirect_canonical', array( $this, 'disable_canonical_redirect' ), 10, 2 );
 		add_filter( 'pre_get_document_title', array( $this, 'document_title' ), 99 );
+		add_filter( 'body_class', array( $this, 'body_class' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'template_redirect', array( $this, 'render_virtual_route' ), 2 );
 	}
 
@@ -42,11 +45,11 @@ final class TargetRouteCompat {
 		add_rewrite_rule( '^configurator\.html$', 'index.php?kcp_target_route=' . self::ROUTE_CONFIGURATOR, 'top' );
 		add_rewrite_rule( '^configurator/-\.html$', 'index.php?kcp_target_route=' . self::ROUTE_CONFIGURATOR_EMPTY, 'top' );
 		add_rewrite_rule( '^assistent\.html$', 'index.php?kcp_target_route=' . self::ROUTE_ASSISTANT, 'top' );
+		add_rewrite_rule( '^shop\.html$', 'index.php?kcp_target_route=' . self::ROUTE_SHOP_HOME, 'top' );
 		add_rewrite_rule( '^afrekenen/-\.html$', 'index.php?kcp_target_route=' . self::ROUTE_CHECKOUT_EMPTY, 'top' );
 		add_rewrite_rule( '^afrekenen\.html$', 'index.php?pagename=cart', 'top' );
 
 		if ( class_exists( 'WooCommerce' ) ) {
-			add_rewrite_rule( '^shop\.html$', 'index.php?post_type=product', 'top' );
 			add_rewrite_rule( '^shop/vipp/verlichting/wandlamp\.html$', 'index.php?product=wandlamp', 'top' );
 			add_rewrite_rule( '^shop/([^/]+)\.html$', 'index.php?product_cat=$matches[1]', 'top' );
 			add_rewrite_rule( '^shop/([^/]+)/([^/]+)\.html$', 'index.php?product_cat=$matches[2]', 'top' );
@@ -81,6 +84,74 @@ final class TargetRouteCompat {
 	 */
 	public static function uses_shell(): bool {
 		return self::is_route();
+	}
+
+	/**
+	 * Whether the current request is using the target .html URL surface.
+	 */
+	public static function is_target_request(): bool {
+		if ( self::is_route() ) {
+			return true;
+		}
+
+		$path = self::current_relative_request_path();
+
+		return (bool) (
+			preg_match( '#^(?:configurator|assistent|shop|afrekenen)(?:/.*)?\.html$#', $path )
+			|| preg_match( '#^kasten/.+\.html$#', $path )
+		);
+	}
+
+	/**
+	 * Target-compatible configurator URL.
+	 */
+	public static function configurator_url(): string {
+		return home_url( '/configurator.html' );
+	}
+
+	/**
+	 * Target-compatible webshop URL.
+	 */
+	public static function shop_home_url(): string {
+		return home_url( '/shop.html' );
+	}
+
+	/**
+	 * Target-compatible cart URL.
+	 */
+	public static function cart_url(): string {
+		return home_url( '/afrekenen.html' );
+	}
+
+	/**
+	 * Add storefront classes to virtual target pages.
+	 *
+	 * @param array<int, string> $classes Body classes.
+	 * @return array<int, string>
+	 */
+	public function body_class( array $classes ): array {
+		if ( self::is_route( self::ROUTE_SHOP_HOME ) ) {
+			$classes[] = 'kcp-shop-active';
+			$classes[] = 'kcp-shop-home-active';
+		}
+
+		return $classes;
+	}
+
+	/**
+	 * Enqueue assets for target virtual pages that bypass WooCommerce templates.
+	 */
+	public function enqueue_assets(): void {
+		if ( ! self::is_route( self::ROUTE_SHOP_HOME ) ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'kcp-shop',
+			KCP_PLUGIN_URL . 'assets/frontend/css/shop.css',
+			array(),
+			KCP_VERSION
+		);
 	}
 
 	/**
@@ -147,6 +218,12 @@ final class TargetRouteCompat {
 
 		if ( self::ROUTE_CONFIGURATOR === $route ) {
 			echo do_shortcode( '[kcp_configurator_landing]' );
+		} elseif ( self::ROUTE_SHOP_HOME === $route ) {
+			$template = KCP_PLUGIN_DIR . 'templates/woocommerce/partials/shop-home.php';
+
+			if ( is_readable( $template ) ) {
+				include $template;
+			}
 		}
 
 		get_footer();
@@ -160,6 +237,7 @@ final class TargetRouteCompat {
 		return match ( $route ) {
 			self::ROUTE_CONFIGURATOR => __( 'Configurator | jouw nieuwe keukenkasten zelf online samenstellen', 'kitchen-configurator-pro' ),
 			self::ROUTE_ASSISTANT => __( 'Virtuele Assistent | Wij helpen jou op weg naar jouw nieuwe keuken', 'kitchen-configurator-pro' ),
+			self::ROUTE_SHOP_HOME => __( 'KeukenKastenFabriek | webwinkel voor Vipp Quooker en Buster+Punch', 'kitchen-configurator-pro' ),
 			default => '',
 		};
 	}
@@ -168,6 +246,13 @@ final class TargetRouteCompat {
 	 * Current request path relative to the WordPress home path.
 	 */
 	private function current_request_path(): string {
+		return self::current_relative_request_path();
+	}
+
+	/**
+	 * Current request path relative to the WordPress home path.
+	 */
+	private static function current_relative_request_path(): string {
 		$uri = isset( $_SERVER['REQUEST_URI'] )
 			? (string) wp_unslash( $_SERVER['REQUEST_URI'] )
 			: '';

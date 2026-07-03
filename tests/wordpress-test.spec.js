@@ -39,6 +39,10 @@ test('target html routes render without canonical redirects', async ({ page }) =
       heading: /stel zelf je keuken samen/i,
     },
     {
+      path: '/shop.html',
+      heading: /webshop/i,
+    },
+    {
       path: '/shop/vipp.html',
       heading: /gemaakt voor het leven/i,
     },
