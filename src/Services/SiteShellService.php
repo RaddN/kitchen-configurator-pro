@@ -17,6 +17,7 @@ use KitchenConfiguratorPro\Frontend\CabinetSelectShortcode;
 use KitchenConfiguratorPro\Frontend\ConfiguratorLandingShortcode;
 use KitchenConfiguratorPro\Frontend\DesignShortcode;
 use KitchenConfiguratorPro\Frontend\Shortcode;
+use KitchenConfiguratorPro\Frontend\TargetRouteCompat;
 
 /**
  * Builds navigation data and detects when the custom shell should replace the theme header/footer.
@@ -48,6 +49,10 @@ final class SiteShellService {
 		}
 
 		if ( CabinetRouter::is_child_list_route() || CabinetRouter::is_detail_route() ) {
+			return true;
+		}
+
+		if ( TargetRouteCompat::uses_shell() ) {
 			return true;
 		}
 
@@ -105,6 +110,15 @@ final class SiteShellService {
 		}
 
 		if ( ConfiguratorLandingShortcode::post_has_shortcode() || ConfiguratorLandingShortcode::is_rendered() ) {
+			return array(
+				array(
+					'label' => __( 'configurator', 'kitchen-configurator-pro' ),
+					'url'   => '',
+				),
+			);
+		}
+
+		if ( TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_CONFIGURATOR ) ) {
 			return array(
 				array(
 					'label' => __( 'configurator', 'kitchen-configurator-pro' ),

@@ -74,6 +74,11 @@ final class FrontendServiceProvider {
 		);
 
 		$this->container->singleton(
+			TargetRouteCompat::class,
+			static fn () => new TargetRouteCompat()
+		);
+
+		$this->container->singleton(
 			CabinetListAssets::class,
 			static fn () => new CabinetListAssets()
 		);
@@ -133,6 +138,7 @@ final class FrontendServiceProvider {
 		$this->container->get( CabinetListShortcode::class )->register();
 		$this->container->get( CabinetDetailShortcode::class )->register();
 		$this->container->get( CabinetRouter::class )->register();
+		$this->container->get( TargetRouteCompat::class )->register();
 		$this->container->get( SiteShellPresenter::class )->register();
 		$this->container->get( Assets::class )->register();
 		$this->container->get( DesignAssets::class )->register();

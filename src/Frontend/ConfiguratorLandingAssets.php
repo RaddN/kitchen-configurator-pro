@@ -31,7 +31,10 @@ final class ConfiguratorLandingAssets {
 	 * @return array<int, string>
 	 */
 	public function body_class( array $classes ): array {
-		if ( ! ConfiguratorLandingShortcode::post_has_shortcode() ) {
+		if (
+			! ConfiguratorLandingShortcode::post_has_shortcode()
+			&& ! TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_CONFIGURATOR )
+		) {
 			return $classes;
 		}
 
@@ -45,7 +48,11 @@ final class ConfiguratorLandingAssets {
 	 * Enqueue landing page assets.
 	 */
 	public function enqueue(): void {
-		if ( ! ConfiguratorLandingShortcode::is_rendered() && ! ConfiguratorLandingShortcode::post_has_shortcode() ) {
+		if (
+			! ConfiguratorLandingShortcode::is_rendered()
+			&& ! ConfiguratorLandingShortcode::post_has_shortcode()
+			&& ! TargetRouteCompat::is_route( TargetRouteCompat::ROUTE_CONFIGURATOR )
+		) {
 			return;
 		}
 

@@ -19,7 +19,7 @@ use KitchenConfiguratorPro\Support\Helpers;
  */
 final class CabinetRouter {
 
-	private const REWRITE_VERSION = '4';
+	private const REWRITE_VERSION = '5';
 
 	private static bool $is_child_list_route = false;
 
@@ -60,6 +60,12 @@ final class CabinetRouter {
 			'index.php?kcp_cabinet_child_list=1&kcp_category_slug=$matches[1]&kcp_parent_cabinet_slug=$matches[2]',
 			'top'
 		);
+
+		add_rewrite_rule(
+			'^kasten/([^/]+)/(.+)\.html$',
+			'index.php?kcp_target_cabinet_path=$matches[2]&kcp_kitchen_type=$matches[1]',
+			'top'
+		);
 	}
 
 	/**
@@ -69,6 +75,14 @@ final class CabinetRouter {
 	public function match_cabinet_request( array $query_vars ): array {
 		if ( ! empty( $query_vars['kcp_cabinet_child_list'] ) || ! empty( $query_vars['kcp_cabinet_detail'] ) ) {
 			return $query_vars;
+		}
+
+		$target_match = $this->match_target_cabinet_request_path( (string) ( $query_vars['kcp_target_cabinet_path'] ?? '' ) );
+
+		if ( null !== $target_match ) {
+			unset( $query_vars['pagename'], $query_vars['name'], $query_vars['page'], $query_vars['error'] );
+
+			return array_merge( $query_vars, $target_match );
 		}
 
 		$detail_match = $this->match_detail_request_path();
@@ -115,6 +129,8 @@ final class CabinetRouter {
 		$vars[] = 'kcp_category_slug';
 		$vars[] = 'kcp_parent_cabinet_slug';
 		$vars[] = 'kcp_cabinet_slug';
+		$vars[] = 'kcp_target_cabinet_path';
+		$vars[] = 'kcp_kitchen_type';
 
 		return $vars;
 	}
@@ -365,6 +381,62 @@ final class CabinetRouter {
 			'category_slug' => sanitize_title( (string) ( $matches[1] ?? '' ) ),
 			'parent_slug'   => sanitize_title( (string) ( $matches[2] ?? '' ) ),
 		);
+	}
+
+	/**
+	 * @return array<string, string>|null
+	 */
+	private function match_target_cabinet_request_path( string $raw_path = '' ): ?array {
+		if ( '' === $raw_path ) {
+			$uri = $this->current_relative_request_path();
+
+			if ( ! preg_match( '#^kasten/[^/]+/(.+)\.html$#', $uri, $matches ) ) {
+				return null;
+			}
+
+			$raw_path = (string) ( $matches[1] ?? '' );
+		}
+
+		$parts = array_values(
+			array_filter(
+				array_map(
+					static fn( string $part ): string => sanitize_title( rawurldecode( $part ) ),
+					explode( '/', trim( $raw_path, '/' ) )
+				),
+				static fn( string $part ): bool => '' !== $part
+			)
+		);
+
+		if ( count( $parts ) < 2 ) {
+			return null;
+		}
+
+		$category_slug = array_shift( $parts );
+		$last_slug     = (string) end( $parts );
+
+		if ( count( $parts ) >= 2 ) {
+			$parent_slug = (string) $parts[ count( $parts ) - 2 ];
+			$cabinet_slug = $last_slug;
+
+			if ( $this->is_valid_detail_route( $category_slug, $parent_slug, $cabinet_slug ) ) {
+				return array(
+					'kcp_cabinet_detail'      => '1',
+					'kcp_category_slug'       => $category_slug,
+					'kcp_parent_cabinet_slug' => $parent_slug,
+					'kcp_cabinet_slug'        => $cabinet_slug,
+				);
+			}
+		}
+
+		if ( $this->is_valid_child_list_route( $category_slug, $last_slug ) ) {
+			return array(
+				'kcp_cabinet_child_list'    => '1',
+				'kcp_category_slug'         => $category_slug,
+				'kcp_parent_cabinet_slug'   => $last_slug,
+			);
+		}
+
+		return null;
 	}
 
 	private function current_relative_request_path(): string {
