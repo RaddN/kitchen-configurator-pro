@@ -1,0 +1,419 @@
+/**
+ * selecteer kasten — matched to configurator.keukenkastenfabriek.nl
+ * Reference: cabinet-group-selection-page
+ */
+
+body.kcp-cabinet-select-active {
+	background: #f0efee !important;
+}
+
+body.kcp-cabinet-select-active .site,
+body.kcp-cabinet-select-active #page {
+	background: #f0efee;
+}
+
+body.kcp-cabinet-select-active .site-content .ast-container,
+body.kcp-cabinet-select-active .site-content .content-area,
+body.kcp-cabinet-select-active .ast-plain-container .site-content,
+body.kcp-cabinet-select-active .ast-separate-container .site-content {
+	max-width: none;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+body.kcp-cabinet-select-active #primary {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+body.kcp-cabinet-select-active .entry-header,
+body.kcp-cabinet-select-active .entry-title,
+body.kcp-cabinet-select-active .ast-single-entry-banner {
+	display: none !important;
+}
+
+body.kcp-cabinet-select-active .entry-content > .wp-block-paragraph:empty {
+	display: none;
+}
+
+.kcp-cabinet-select {
+	--kcp-cs-bg: #f0efee;
+	--kcp-cs-text: #000;
+	--kcp-cs-muted: #a49d93;
+	min-height: 100vh;
+	background: var( --kcp-cs-bg );
+	color: var( --kcp-cs-text );
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 20px;
+	font-weight: 400;
+	line-height: 1.4;
+	-webkit-font-smoothing: antialiased;
+}
+
+.kcp-cabinet-select *,
+.kcp-cabinet-select *::before,
+.kcp-cabinet-select *::after {
+	box-sizing: border-box;
+}
+
+/* ── Breadcrumbs (configurator step navigation) ────────────────── */
+
+.kcp-cabinet-select__breadcrumbs {
+	margin: 0 0 24px;
+}
+
+.kcp-cabinet-select__breadcrumb-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 14px;
+	font-weight: 500;
+	text-transform: lowercase;
+}
+
+.kcp-cabinet-select__breadcrumb-list a {
+	color: var( --kcp-cs-text );
+	text-decoration: none;
+}
+
+.kcp-cabinet-select__breadcrumb-list a:hover,
+.kcp-cabinet-select__breadcrumb-list a:focus-visible {
+	text-decoration: underline;
+}
+
+.kcp-cabinet-select__breadcrumb-list [aria-current="page"] {
+	color: var( --kcp-cs-muted );
+}
+
+/* ── Page (cabinet-group-selection-page) ───────────────────────── */
+
+.kcp-cabinet-select__page {
+	position: relative;
+	overflow: hidden;
+	width: min( 100%, 1320px );
+	margin: 0 auto;
+	padding: 24px clamp( 16px, 4vw, 48px ) 48px;
+}
+
+/* ── Back link (meerinfoblok-backtodesign) ─────────────────────── */
+
+.kcp-cabinet-select__link {
+	position: relative;
+	display: inline-block;
+	padding: 6.5px 0;
+	color: var( --kcp-cs-text );
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.2;
+	text-decoration: none;
+	text-transform: lowercase;
+	white-space: nowrap;
+}
+
+.kcp-cabinet-select__link::after {
+	content: "";
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border-bottom: 2px solid var( --kcp-cs-text );
+}
+
+.kcp-cabinet-select__link:hover,
+.kcp-cabinet-select__link:focus-visible {
+	color: var( --kcp-cs-text );
+	text-decoration: none;
+}
+
+.kcp-cabinet-select__link--back {
+	position: absolute;
+	right: clamp( 16px, 4vw, 48px );
+	top: 34px;
+	z-index: 2;
+}
+
+.kcp-cabinet-select__link--edit {
+	font-size: 13px;
+}
+
+/* ── Holder (cabinet-group-selection-holder) ─────────────────────── */
+
+.kcp-cabinet-select__holder {
+	display: table;
+	width: 100%;
+	min-height: 815px;
+	max-height: 815px;
+	table-layout: fixed;
+}
+
+.kcp-cabinet-select__content,
+.kcp-cabinet-select__stage {
+	display: table-cell;
+	vertical-align: top;
+}
+
+.kcp-cabinet-select__content {
+	padding-right: 20px;
+	width: 48%;
+}
+
+.kcp-cabinet-select__stage {
+	text-align: right;
+	padding-top: 60px;
+	width: 52%;
+	overflow: hidden;
+}
+
+/* ── Visual scaler (fits 650×730 stack into column width) ─────── */
+
+.kcp-cabinet-select__visual-scaler {
+	display: inline-block;
+	margin-left: auto;
+	vertical-align: top;
+	overflow: visible;
+}
+
+.kcp-cabinet-select__visuals {
+	position: relative;
+	width: 650px;
+	height: 730px;
+	display: inline-block;
+	transform-origin: top right;
+}
+
+.kcp-cabinet-select__title {
+	margin: 0 0 10px;
+	font-size: clamp( 2.25rem, 5vw, 3.75rem );
+	font-weight: 500;
+	line-height: 1.05;
+	text-transform: lowercase;
+}
+
+.kcp-cabinet-select__description {
+	margin: 0;
+	max-width: 380px;
+	text-transform: lowercase;
+}
+
+/* Categories (cabinet-group-selection-ul) */
+
+.kcp-cabinet-select__categories {
+	margin: 0;
+	padding: 40px 0 0;
+	list-style: none;
+}
+
+.kcp-cabinet-select__categories li {
+	padding-top: 10px;
+}
+
+.kcp-cabinet-select__categories li:first-child {
+	padding-top: 0;
+}
+
+.kcp-cabinet-select__category {
+	display: block;
+	width: 100%;
+	max-width: 420px;
+	padding: 21px 40px;
+	border: 2px solid #000;
+	border-radius: 60px;
+	background: #fff;
+	color: #000;
+	font: inherit;
+	font-size: clamp( 1.125rem, 2.5vw, 1.375rem );
+	font-weight: 500;
+	line-height: 1.2;
+	text-align: center;
+	text-decoration: none !important;
+	text-transform: lowercase;
+	cursor: pointer;
+	transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, filter 0.4s ease;
+}
+
+.kcp-cabinet-select__category:hover,
+.kcp-cabinet-select__category:focus-visible,
+.kcp-cabinet-select__category.button-is-hovering {
+	background: #000;
+	color: #fff;
+	text-decoration: none !important;
+}
+
+/* Summary (configurator-detail-holder-design) */
+
+.kcp-cabinet-select__summary {
+	padding-top: 50px;
+	padding-bottom: 20px;
+}
+
+.kcp-cabinet-select__summary-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+	text-transform: none;
+}
+
+.kcp-cabinet-select__design-parts {
+	margin: 0;
+	padding-bottom: 10px;
+	font-size: 15px;
+	line-height: 18px;
+}
+
+.kcp-cabinet-select__design-parts--empty {
+	color: var( --kcp-cs-muted );
+}
+
+.kcp-cabinet-select__summary-item {
+	display: block;
+}
+
+.kcp-cabinet-select__summary-item strong {
+	font-weight: 700;
+}
+
+.kcp-cabinet-select__empty {
+	font-size: 16px;
+	color: var( --kcp-cs-muted );
+}
+
+/* ── Left column ───────────────────────────────────────────────── */
+
+.kcp-cabinet-select__visual {
+	position: absolute;
+	margin: 0;
+	border: 0 !important;
+	text-decoration: none;
+	transition: filter 0.4s ease;
+	cursor: pointer;
+}
+
+.kcp-cabinet-select__visual-inner,
+.kcp-cabinet-select__visual img {
+	pointer-events: none;
+}
+
+.kcp-cabinet-select__visual-inner * {
+	pointer-events: auto;
+	cursor: pointer;
+}
+
+.kcp-cabinet-select__visual img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.kcp-cabinet-select__visual--pos-2 {
+	z-index: 2;
+	top: 54px;
+	left: 150px;
+	width: 280px;
+}
+
+.kcp-cabinet-select__visual--pos-3 {
+	z-index: 3;
+	left: 393px;
+	top: 0;
+	width: 227px;
+}
+
+.kcp-cabinet-select__visual--pos-4 {
+	z-index: 4;
+	left: 357px;
+	top: 427px;
+	width: 290px;
+	height: 290px;
+}
+
+/* Reference hover: button-is-hovering desaturates non-active cabinets */
+.kcp-cabinet-select__visuals.button-is-hovering .kcp-cabinet-select__visual {
+	filter: saturate( 0 ) brightness( 1.6 ) invert( 0.2 );
+}
+
+.kcp-cabinet-select__visuals.button-is-hovering .kcp-cabinet-select__visual.kcp-cabinet-select__visual--hover {
+	filter: saturate( 1 ) brightness( 1 ) invert( 0 );
+}
+
+/* ── Right column visuals (cabinet-group-selection-img-holder) ─── */
+
+.kcp-cabinet-select__fallback-image {
+	display: block;
+	width: 100%;
+	height: auto;
+	object-fit: contain;
+}
+
+.kcp-cabinet-select__fallback-image--placeholder {
+	min-height: 560px;
+	background: linear-gradient( 180deg, rgba( 255, 255, 255, 0.35 ), rgba( 0, 0, 0, 0.03 ) );
+}
+
+/* ── Responsive (reference breakpoints) ──────────────────────────── */
+
+@media ( max-width: 1100px ) {
+	.kcp-cabinet-select__category {
+		max-width: 320px;
+		padding: 15px 25px;
+		font-size: 18px;
+	}
+}
+
+@media ( max-width: 767px ) {
+	.kcp-cabinet-select__holder,
+	.kcp-cabinet-select__content,
+	.kcp-cabinet-select__stage {
+		display: block;
+		width: 100%;
+		max-height: none;
+		min-height: 0;
+	}
+
+	.kcp-cabinet-select__content {
+		padding-right: 0;
+	}
+
+	.kcp-cabinet-select__stage {
+		padding-top: 0;
+		text-align: center;
+		overflow: visible;
+	}
+
+	.kcp-cabinet-select__visual-scaler {
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.kcp-cabinet-select__categories {
+		padding-top: 20px;
+	}
+
+	.kcp-cabinet-select__category {
+		font-size: 16px;
+		padding: 12px 20px;
+	}
+
+	.kcp-cabinet-select__link--back {
+		position: relative;
+		top: 0;
+		right: auto;
+		margin-bottom: 20px;
+	}
+
+	.kcp-cabinet-select__summary {
+		margin-top: -30px;
+	}
+}
+
+@media ( max-width: 640px ) {
+	.kcp-cabinet-select {
+		font-size: 16px;
+	}
+
+	.kcp-cabinet-select__category {
+		font-size: 13px;
+	}
+}

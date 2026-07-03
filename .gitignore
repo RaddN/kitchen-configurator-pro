@@ -1,0 +1,24 @@
+/vendor/
+/node_modules/
+composer.lock
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+/coverage/
+/phpunit.xml
+/frontend-src/node_modules/
+/frontend-src/dist/
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright-mcp/
+/playwright/.cache/
+/playwright/.auth/
+.env
